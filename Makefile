@@ -3,7 +3,8 @@ KOBJ = $(BUILD)/obj/kernel
 COBJ = $(BUILD)/obj/client
 
 SDK = macosx
-ARCH = arm64e
+KERNEL_ARCH = arm64e
+CLIENT_ARCH = arm64
 
 SYSROOT := $(shell xcrun --sdk $(SDK) --show-sdk-path)
 
@@ -12,8 +13,9 @@ CLANGPP := $(shell xcrun --sdk $(SDK) --find clang++)
 
 DSYMUTIL := $(shell xcrun --sdk $(SDK) --find dsymutil)
 
-CC := $(CLANG) -isysroot $(SYSROOT) -arch $(ARCH)
-CXX := $(CLANGPP) -isysroot $(SYSROOT) -arch $(ARCH)
+CC := $(CLANG)
+CXX := $(CLANGPP)
+
 NASM := nasm
 
 PKG = com.home.inspector
@@ -41,9 +43,10 @@ CLIENT_CPPOBJECTS := $(patsubst client/%.cpp, $(COBJ)/%.o, $(CLIENT_CPPSOURCES))
 
 CPATH := $(SYSROOT)/usr/include
 
-CFLAGS += -g -I/usr/include -I/usr/local/include $(KERNEL_HEADERS) -O2 -fmodules -mkernel -I./kernel -nostdlib -DMACH_KERNEL_PRIVATE -O2 -D__KERNEL__ -DAPPLE -DNeXT
-LDFLAGS += -g -std=c++20 -fno-builtin -fno-common -L/usr/lib -L/usr/local/lib -D__KERNEL__ -DMACH_KERNEL_PRIVATE -Wl,-kext -DAPPLE -DNeXT  -target arm64e-apple-macos15.2 -Xlinker -reproducible -Xlinker -kext -nostdlib -lkmodc++ -lkmod -lcc_kext
-CXXFLAGS += -g -std=c++20 $(KERNEL_HEADERS) -fno-builtin -fno-common -nostdlib -DAPPLE -DNeXT 
+CFLAGS += -g -I/usr/include -I/usr/local/include -isysroot $(SYSROOT) -arch $(KERNEL_ARCH) $(KERNEL_HEADERS) -O2 -fmodules -mkernel -I./kernel -nostdlib -DMACH_KERNEL_PRIVATE -O2 -D__KERNEL__ -DAPPLE -DNeXT $(KERNEL_)
+CXXFLAGS += -g -std=c++20 $(KERNEL_HEADERS) -isysroot $(SYSROOT) -arch $(KERNEL_ARCH) -fno-builtin -fno-common -nostdlib -DAPPLE -DNeXT
+LDFLAGS += -g -std=c++20 -isysroot $(SYSROOT) -arch $(KERNEL_ARCH) -fno-builtin -fno-common -L/usr/lib -L/usr/local/lib -D__KERNEL__ -DMACH_KERNEL_PRIVATE -Wl,-kext -DAPPLE -DNeXT  -target arm64e-apple-macos15.2 -Xlinker -reproducible -Xlinker -kext -nostdlib -lkmodc++ -lkmod -lcc_kext
+
 
 .PHONY: all clean
 
@@ -59,11 +62,11 @@ $(KERNEL_CPPOBJECTS): $(KOBJ)/%.o: kernel/%.cpp
 
 $(CLIENT_COBJECTS): $(COBJ)/%.o: client/%.c
 	mkdir -p $(COBJ)
-	$(CC) -c $< -o $@
+	$(CC)  -isysroot $(SYSROOT) -c $< -o $@
 
 $(CLIENT_CPPOBJECTS): $(KOBJ)/%.o: client/%.cpp
 	mkdir -p $(COBJ)
-	$(CXX) -g -c $< -o $@
+	$(CXX) -isysroot $(SYSROOT) -g -c $< -o $@
 
 $(KOBJ):
 	rm -rf $(KOBJ)/*.o
@@ -88,13 +91,16 @@ set_owner: codesign
 	sudo chown -R root:wheel $(BUILD)/$(TARGET).kext
 
 $(BUILD)/$(TARGET): $(CLIENT_COBJECTS)
-	$(CC) -o $@ $(CLIENT_COBJECTS)
+	$(CC) -isysroot $(SYSROOT) -o $@ $(CLIENT_COBJECTS)
 
 client: $(BUILD)/$(TARGET)
-	
 
-clean:
-	rm -rf $(KOBJ)/*
+clean_client:
 	rm -rf $(COBJ)/*
+	rm -rf $(BUILD)/$(TARGET)
+
+clean_kernel:
+	rm -rf $(KOBJ)/*
 	sudo rm -rf $(BUILD)/$(TARGET).kext
-	sudo rm -rf $(BUILD)/$(TARGET)
+
+clean: clean_client  clean_kernel
