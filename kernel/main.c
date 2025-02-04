@@ -158,6 +158,16 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
             memcpy(data, &lreq, sizeof(struct inspector_opt_krw64));
             break;
         }
+
+        case INSPECTOR_OPT_CURRENT_PROC: {
+            if (data == NULL || *len != sizeof(uint64_t)) {
+                error = EINVAL;
+                break;
+            }
+            error = 0;
+            *(uint64_t*)data = (uint64_t)current_proc();
+            break;
+        }
     }
     return error;
 }

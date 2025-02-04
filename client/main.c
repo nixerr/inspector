@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
         kread64(sockfd, (void*)readat, &value);
         INFO("where: 0x%llx, what : 0x%016llx", readat, value);
         INFO("value : 0x%x", (uint8_t)value);
+    } else if (argc == 2 && strncmp(argv[1], "proc", strlen(argv[1])) == 0) {
+        uint64_t proc = get_current_proc(sockfd);
+        INFO("proc: 0x%016llx", proc);
     }
     
 #if 0
