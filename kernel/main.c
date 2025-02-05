@@ -105,6 +105,7 @@ errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
                 error = EINVAL;
                 break;
             }
+            error = 0;
             inspector_opt_krw64_t req = (inspector_opt_krw64_t)data;
             kwrite64(req);
             break;
@@ -126,8 +127,8 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
                 error = 0x1337;
                 break;
             }
-            *(uint64_t*)data = get_kslide();
             error = 0;
+            *(uint64_t*)data = get_kslide();
             break;
         }    
 
