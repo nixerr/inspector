@@ -26,7 +26,7 @@ IOKIT_FWK = $(SYSROOT)/System/Library/Frameworks/IOKit.framework
 DRIVERKIT_FWK = $(SYSROOT)/System/Library/Frameworks/DriverKit.framework
 IOSURFACE_FWK = $(SYSROOT)/System/Library/Frameworks/IOSurface.framework
 
-KERNEL_HEADERS = -I$(KFWK)/Headers -I$(IOKIT_FWK)/Headers -I/$(DRIVERKIT_FWK)/Headers -I/$(IOSURFACE_FWK)/Headers
+KERNEL_HEADERS = -I$(KFWK)/Headers -I$(IOKIT_FWK)/Headers -I$(DRIVERKIT_FWK)/Headers -I$(IOSURFACE_FWK)/Headers
 
 KERNEL_CSOURCES := $(wildcard kernel/*.c)
 KERNEL_COBJECTS := $(patsubst kernel/%.c, $(KOBJ)/%.o, $(KERNEL_CSOURCES))
@@ -104,3 +104,6 @@ clean_kernel:
 	sudo rm -rf $(BUILD)/$(TARGET).kext
 
 clean: clean_client  clean_kernel
+
+includes:
+	for l in $(KERNEL_HEADERS); do echo $${l} | awk -F'-I' '{print $$2}';done

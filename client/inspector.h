@@ -16,4 +16,6 @@ void kread64(int fd, void *address, uint64_t *value);
 void kcopyin(int fd, void *kaddress, void *uaddress, uint64_t length);
 void kcopyout(int fd, void *kaddress, void *uaddress, uint64_t length);
 
+uint64_t kcall(int fd, uint64_t func, uint32_t num, ...);
+
 #endif

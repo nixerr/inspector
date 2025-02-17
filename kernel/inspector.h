@@ -1,3 +1,6 @@
+#ifndef KINSPECTOR_H
+#define KINSPECTOR_H
+
 #ifdef __KERNEL__
 #include <sys/unistd.h>
 #include <sys/types.h>
@@ -37,6 +40,15 @@ struct inspector_opt_copy {
     uint64_t length;
 } inspector_opt_copy;
 
+struct inspector_opt_kcall {
+    uint64_t function;
+    uint64_t arg[7];
+    uint64_t ret;
+} inspector_opt_kcall;
+
 typedef struct inspector_opt_krw64 *inspector_opt_krw64_t;
 typedef struct inspector_opt_krw32 *inspector_opt_krw32_t;
 typedef struct inspector_opt_copy *inspector_opt_copy_t;
+typedef struct inspector_opt_kcall *inspector_opt_kcall_t;
+
+#endif

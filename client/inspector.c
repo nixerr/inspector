@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "log.h"
 #include "../kernel/inspector.h"
@@ -149,4 +150,25 @@ void kcopyout(int fd, void *kaddress, void *uaddress, uint64_t length)
     }
 
     return;
+}
+
+uint64_t kcall(int fd, uint64_t func, int num, ...)
+{
+    va_list ap;
+    struct inspector_opt_kcall req = {0};
+
+    req.function = func;
+
+    va_start (ap, num);
+    for (int i = 0; i < num; i++) {
+        req.arg[i] = va_arg(ap, uint64_t);
+    }
+
+    socklen_t len = sizeof(struct inspector_opt_kcall);
+    int error = getsockopt(fd, SYSPROTO_CONTROL, INSPECTOR_OPT_KCALL, &req, &len);
+    if (error != 0) {
+        ERROR("kcall 0x%llx, error : 0x%x", (uint64_t)func, error);
+    }
+
+    return req.ret;
 }

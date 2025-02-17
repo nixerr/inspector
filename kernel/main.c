@@ -11,11 +11,13 @@
 #include <sys/errno.h>
 #include <os/log.h>
 #include <vm/vm_kern.h>
-#include "mod.h"
-#include "inspector.h"
-
 #include <vm/vm_map.h>
 #include <sys/vm.h>
+
+#include "mod.h"
+#include "inspector.h"
+#include "kcall.h"
+
 // #include <libkern/copyio.h>
 
 // #include <vm/pmap.h>
@@ -82,13 +84,13 @@ void kread64(inspector_opt_krw64_t request)
 }
 
 /* A simple setsockopt handler */
-errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int opt, void *data, size_t len )
+errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int opt, void *data, size_t len)
 {
     int    error = EINVAL;
 #if DO_LOG
     os_log_error(OS_LOG_DEFAULT, "EPHandleSet opt is %d\n", opt);
 #endif
- 
+
     switch ( opt ) {
         case INSPECTOR_OPT_COPYIN: {
             if (data == NULL || len != sizeof(inspector_opt_copy)) {
@@ -113,7 +115,7 @@ errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
     }
     return error;
 }
- 
+
 /* A simple A simple getsockopt handler */
 errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int opt, void *data, size_t *len)
 {
@@ -130,7 +132,7 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
             error = 0;
             *(uint64_t*)data = get_kslide();
             break;
-        }    
+        }
 
         case INSPECTOR_OPT_COPYOUT: {
             if (data == NULL || *len != sizeof(inspector_opt_copy)) {
@@ -169,10 +171,22 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
             *(uint64_t*)data = (uint64_t)current_proc();
             break;
         }
+
+        case INSPECTOR_OPT_KCALL: {
+            if (data == NULL || *len != sizeof(struct inspector_opt_kcall)) {
+                error = EINVAL;
+                break;
+            }
+            error = 0;
+            inspector_opt_kcall_t req = (inspector_opt_kcall_t)data;
+            uint64_t ret = kcall(req);
+            req->ret = ret;
+            break;
+        }
     }
     return error;
 }
- 
+
 /* A minimalist connect handler */
 errno_t
 EPHandleConnect(kern_ctl_ref ctlref, struct sockaddr_ctl *sac, void **unitinfo)
@@ -182,7 +196,7 @@ EPHandleConnect(kern_ctl_ref ctlref, struct sockaddr_ctl *sac, void **unitinfo)
 #endif
     return (0);
 }
- 
+
 /* A minimalist disconnect handler */
 errno_t
 EPHandleDisconnect(kern_ctl_ref ctlref, unsigned int unit, void *unitinfo)
@@ -192,7 +206,7 @@ EPHandleDisconnect(kern_ctl_ref ctlref, unsigned int unit, void *unitinfo)
 #endif
     return (0);
 }
- 
+
 /* A minimalist write handler */
 errno_t EPHandleWrite(kern_ctl_ref ctlref, unsigned int unit, void *userdata, mbuf_t m, int flags)
 {
@@ -220,7 +234,7 @@ kern_return_t inspector_start(kmod_info_t * ki, void *d)
     ep_ctl.ctl_disconnect = EPHandleDisconnect;
     error = ctl_register(&ep_ctl, &kctlref);
     os_log_info(OS_LOG_DEFAULT, "inspector is loaded!\n");
-    
+
     return error;
 }
 

