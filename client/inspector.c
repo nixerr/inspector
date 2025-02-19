@@ -11,9 +11,11 @@
 #include "log.h"
 #include "../kernel/inspector.h"
 
-extern uint64_t kslide;
+uint64_t kslide = 0;
+uint64_t get_kslide(int fd);
 
-int inspector_connect() {
+int inspector_connect()
+{
     struct ctl_info     kernctl_info;
     struct sockaddr_ctl   kernctl_addr;
     int error = 0;
@@ -42,6 +44,9 @@ int inspector_connect() {
         ERROR("Failed to connect to the control socket: %s", strerror(errno));
         goto done;
     }
+
+    kslide = get_kslide(sockfd);
+    assert(kslide != 0);
 
     done:
     if (error && sockfd >= 0) {

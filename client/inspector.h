@@ -3,7 +3,7 @@
 #ifndef INSPECTOR_H
 #define INSPECTOR_H
 
-uint64_t kslide = 0;
+extern uint64_t kslide;
 
 int inspector_connect(void);
 uint64_t get_kslide(int fd);
