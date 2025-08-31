@@ -183,6 +183,18 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
             req->ret = ret;
             break;
         }
+
+        case INSPECTOR_OPT_PAC: {
+            if (data == NULL || *len != sizeof(struct inspector_opt_pac)) {
+                error = EINVAL;
+                break;
+            }
+            error = 0;
+            inspector_opt_pac_t req = (inspector_opt_pac_t)data;
+            // uint64_t ret = pac(req);
+            // req->ret = ret;
+            break;
+        }
     }
     return error;
 }

@@ -22,6 +22,7 @@ enum INSPECTOR_SOCK_OPT {
     INSPECTOR_OPT_KCALL,
     INSPECTOR_OPT_KPATCH,
     INSPECTOR_OPT_CURRENT_PROC,
+    INSPECTOR_OPT_PAC,
 };
 
 struct inspector_opt_krw64{
@@ -46,9 +47,15 @@ struct inspector_opt_kcall {
     uint64_t ret;
 } inspector_opt_kcall;
 
+struct inspector_opt_pac {
+    uint64_t optype;
+    uint64_t key;
+} inspector_opt_pac;
+
 typedef struct inspector_opt_krw64 *inspector_opt_krw64_t;
 typedef struct inspector_opt_krw32 *inspector_opt_krw32_t;
 typedef struct inspector_opt_copy *inspector_opt_copy_t;
 typedef struct inspector_opt_kcall *inspector_opt_kcall_t;
+typedef struct inspector_opt_pac *inspector_opt_pac_t;
 
 #endif
