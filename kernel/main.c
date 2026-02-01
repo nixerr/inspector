@@ -36,6 +36,12 @@ vm_offset_t kernel_slide = 0;
 
 #define DO_LOG 1
 
+#ifdef DO_LOG
+#define LOG(S, format, ...) os_log_error(S, format __VA_OPT__(,) __VA_ARGS__)
+#else
+#define LOG(S, format, ...)
+#endif
+
 uint64_t bruteforce_kslide(void)
 {
     uint64_t kslide = 0;
@@ -57,14 +63,10 @@ uint64_t bruteforce_kslide(void)
 vm_offset_t get_kslide()
 {
     if (kernel_slide == 0) {
-#if DO_LOG
-        os_log_error(OS_LOG_DEFAULT, "kernel_slide is 0. Running bruteforce_kslide... *****************\n");
-#endif
+        LOG(OS_LOG_DEFAULT, "kernel_slide is 0. Running bruteforce_kslide... *****************\n");
         kernel_slide = bruteforce_kslide();
     }
-#if DO_LOG
-    os_log_error(OS_LOG_DEFAULT, "kernel_slide is 0x%llx *****************\n", (uint64_t)kernel_slide);
-#endif
+    LOG(OS_LOG_DEFAULT, "kernel_slide is 0x%llx *****************\n", (uint64_t)kernel_slide);
     return kernel_slide;
 }
 
@@ -87,9 +89,7 @@ void kread64(inspector_opt_krw64_t request)
 errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int opt, void *data, size_t len)
 {
     int    error = EINVAL;
-#if DO_LOG
-    os_log_error(OS_LOG_DEFAULT, "EPHandleSet opt is %d\n", opt);
-#endif
+    LOG(OS_LOG_DEFAULT, "EPHandleSet opt is %d\n", opt);
 
     switch ( opt ) {
         case INSPECTOR_OPT_COPYIN: {
@@ -120,9 +120,7 @@ errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
 errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int opt, void *data, size_t *len)
 {
     int    error = EINVAL;
-#if DO_LOG
-    os_log_error(OS_LOG_DEFAULT, "EPHandleGet opt is %d *****************\n", opt);
-#endif
+    LOG(OS_LOG_DEFAULT, "EPHandleGet opt is %d *****************\n", opt);
     switch ( opt ) {
         case INSPECTOR_OPT_KSLIDE: {
             if (data == NULL || *len != sizeof(uint64_t)) {
@@ -191,9 +189,7 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
 errno_t
 EPHandleConnect(kern_ctl_ref ctlref, struct sockaddr_ctl *sac, void **unitinfo)
 {
-#if DO_LOG
-    os_log_error(OS_LOG_DEFAULT, "EPHandleConnect called\n");
-#endif
+    LOG(OS_LOG_DEFAULT, "EPHandleConnect called\n");
     return (0);
 }
 
@@ -201,18 +197,14 @@ EPHandleConnect(kern_ctl_ref ctlref, struct sockaddr_ctl *sac, void **unitinfo)
 errno_t
 EPHandleDisconnect(kern_ctl_ref ctlref, unsigned int unit, void *unitinfo)
 {
-#if DO_LOG
-    os_log_error(OS_LOG_DEFAULT, "EPHandleDisconnect called\n");
-#endif
+    LOG(OS_LOG_DEFAULT, "EPHandleDisconnect called\n");
     return (0);
 }
 
 /* A minimalist write handler */
 errno_t EPHandleWrite(kern_ctl_ref ctlref, unsigned int unit, void *userdata, mbuf_t m, int flags)
 {
-#if DO_LOG
-    os_log_error(OS_LOG_DEFAULT, "EPHandleWrite called\n");
-#endif
+    LOG(OS_LOG_DEFAULT, "EPHandleWrite called\n");
     return (0);
 }
 
@@ -233,14 +225,14 @@ kern_return_t inspector_start(kmod_info_t * ki, void *d)
     ep_ctl.ctl_connect = EPHandleConnect;
     ep_ctl.ctl_disconnect = EPHandleDisconnect;
     error = ctl_register(&ep_ctl, &kctlref);
-    os_log_info(OS_LOG_DEFAULT, "inspector is loaded!\n");
+    LOG(OS_LOG_DEFAULT, "inspector is loaded!\n");
 
     return error;
 }
 
 kern_return_t inspector_stop(kmod_info_t *ki, void *d)
 {
-    os_log_info(OS_LOG_DEFAULT, "inspector is unloaded!\n");
+    LOG(OS_LOG_DEFAULT, "inspector is unloaded!\n");
     errno_t error;
     error = ctl_deregister(kctlref);
     return error;
