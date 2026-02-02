@@ -165,6 +165,8 @@ uint64_t kcall(int fd, uint64_t func, int num, ...)
     req.function = func;
 
     va_start (ap, num);
+
+    assert(num <= sizeof(req.arg));
     for (int i = 0; i < num; i++) {
         req.arg[i] = va_arg(ap, uint64_t);
     }

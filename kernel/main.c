@@ -93,7 +93,7 @@ errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
 
     switch ( opt ) {
         case INSPECTOR_OPT_COPYIN: {
-            if (data == NULL || len != sizeof(inspector_opt_copy)) {
+            if (data == NULL || len != sizeof(struct inspector_opt_copy)) {
                 error = EINVAL;
                 break;
             }
@@ -103,7 +103,7 @@ errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
         }
 
         case INSPECTOR_OPT_KWRITE64: {
-            if (data == NULL || len != sizeof(inspector_opt_krw64)) {
+            if (data == NULL || len != sizeof(struct inspector_opt_krw64)) {
                 error = EINVAL;
                 break;
             }
@@ -133,7 +133,7 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
         }
 
         case INSPECTOR_OPT_COPYOUT: {
-            if (data == NULL || *len != sizeof(inspector_opt_copy)) {
+            if (data == NULL || *len != sizeof(struct inspector_opt_copy)) {
                 error = EINVAL;
                 break;
             }
@@ -144,7 +144,7 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
         }
 
         case INSPECTOR_OPT_KREAD64: {
-            if (data == NULL || *len != sizeof(inspector_opt_krw64)) {
+            if (data == NULL || *len != sizeof(struct inspector_opt_krw64)) {
                 error = EINVAL;
                 break;
             }

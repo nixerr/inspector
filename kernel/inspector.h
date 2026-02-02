@@ -27,24 +27,24 @@ enum INSPECTOR_SOCK_OPT {
 struct inspector_opt_krw64{
     void *address;
     uint64_t value;
-} inspector_opt_krw64;
+};
 
 struct inspector_opt_krw32{
     void *address;
     uint32_t value;
-} inspector_opt_krw32;
+};
 
 struct inspector_opt_copy {
     void *kaddress;
     user_addr_t uaddress;
     uint64_t length;
-} inspector_opt_copy;
+};
 
 struct inspector_opt_kcall {
     uint64_t function;
-    uint64_t arg[7];
+    uint64_t arg[8];
     uint64_t ret;
-} inspector_opt_kcall;
+};
 
 typedef struct inspector_opt_krw64 *inspector_opt_krw64_t;
 typedef struct inspector_opt_krw32 *inspector_opt_krw32_t;
