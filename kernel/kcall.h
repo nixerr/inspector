@@ -3,6 +3,6 @@
 
 #include "inspector.h"
 
-uint64_t kcall(inspector_opt_kcall_t);
+extern "C" uint64_t kcall(inspector_opt_kcall_t);
 
 #endif

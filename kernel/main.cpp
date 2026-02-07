@@ -24,8 +24,9 @@
 // #include <sys/sysproto.h>
 
 
-kern_return_t inspector_start(kmod_info_t * ki, void *d);
-kern_return_t inspector_stop(kmod_info_t *ki, void *d);
+// kern_return_t inspector_start(kmod_info_t * ki, void *d);
+// kern_return_t inspector_stop(kmod_info_t *ki, void *d);
+
 
 extern task_t kernel_task;
 extern void *kernproc;

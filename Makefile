@@ -58,7 +58,7 @@ $(KERNEL_COBJECTS): $(KOBJ)/%.o: kernel/%.c
 
 $(KERNEL_CPPOBJECTS): $(KOBJ)/%.o: kernel/%.cpp
 	mkdir -p $(KOBJ)
-	$(CXX) $(CFLAGS) $(CXXFLAGS) -g -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(CLIENT_COBJECTS): $(COBJ)/%.o: client/%.c
 	mkdir -p $(COBJ)
@@ -66,7 +66,7 @@ $(CLIENT_COBJECTS): $(COBJ)/%.o: client/%.c
 
 $(CLIENT_CPPOBJECTS): $(KOBJ)/%.o: client/%.cpp
 	mkdir -p $(COBJ)
-	$(CXX) -isysroot $(SYSROOT) -g -c $< -o $@
+	$(CXX) -isysroot $(SYSROOT) -c $< -o $@
 
 $(KOBJ):
 	rm -rf $(KOBJ)/*.o
@@ -77,8 +77,8 @@ $(COBJ):
 $(BUILD)/$(TARGET).kext/Contents/MacOS:
 	mkdir -p $@
 
-$(BUILD)/$(TARGET).kext/Contents/MacOS/$(TARGET): $(KERNEL_COBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $(KERNEL_COBJECTS)
+$(BUILD)/$(TARGET).kext/Contents/MacOS/$(TARGET): $(KERNEL_COBJECTS) $(KERNEL_CPPOBJECTS)
+	$(CXX) $(LDFLAGS) -o $@ $(KERNEL_COBJECTS) $(KERNEL_CPPOBJECTS)
 
 $(BUILD)/$(TARGET).kext/Contents/Info.plist: Info.plist | $(BUILD)/$(TARGET).kext/Contents/MacOS
 	cp -f $< $@
