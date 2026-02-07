@@ -8,11 +8,14 @@
 // #include <mach/mach_types.h>
 #include <libkern/libkern.h>
 #include <sys/kern_control.h>
+#include <sys/kernel.h>
 #include <sys/errno.h>
 #include <os/log.h>
 #include <vm/vm_kern.h>
 #include <vm/vm_map.h>
+#include <kern/task.h>
 #include <sys/vm.h>
+#include <mach/mach_types.h>
 
 #include "mod.h"
 #include "inspector.h"
@@ -167,6 +170,16 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
             }
             error = 0;
             *(uint64_t*)data = (uint64_t)current_proc();
+            break;
+        }
+
+        case INSPECTOR_OPT_CURRENT_TASK: {
+            if (data == NULL || *len != sizeof(uint64_t)) {
+                error = EINVAL;
+                break;
+            }
+            error = 0;
+            *(uint64_t*)data = (uint64_t)current_task();
             break;
         }
 

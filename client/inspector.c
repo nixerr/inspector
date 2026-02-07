@@ -82,6 +82,17 @@ uint64_t get_current_proc(int fd) {
     return proc;
 }
 
+uint64_t get_current_task(int fd) {
+    int error = 0;
+    uint64_t task = 0;
+    socklen_t len = sizeof(uint64_t);
+    error = getsockopt(fd, SYSPROTO_CONTROL, INSPECTOR_OPT_CURRENT_TASK, &task, &len);
+    if (error != 0) {
+        ERROR("current_proc error : 0x%x", error);
+        return 0;
+    }
+    return task;
+}
 
 void *kbase(int fd) {
     if (kslide == 0) {

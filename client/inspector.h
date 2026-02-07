@@ -8,6 +8,7 @@ extern uint64_t kslide;
 int inspector_connect(void);
 uint64_t get_kslide(int fd);
 uint64_t get_current_proc(int fd);
+uint64_t get_current_task(int fd);
 void *kbase(int fd);
 
 void kwrite64(int fd, uint64_t address, uint64_t value);

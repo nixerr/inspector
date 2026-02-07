@@ -44,7 +44,7 @@ CLIENT_CPPOBJECTS := $(patsubst client/%.cpp, $(COBJ)/%.o, $(CLIENT_CPPSOURCES))
 CPATH := $(SYSROOT)/usr/include
 
 CFLAGS += -g -I/usr/include -I/usr/local/include -isysroot $(SYSROOT) -arch $(KERNEL_ARCH) $(KERNEL_HEADERS) -O2 -fmodules -mkernel -I./kernel -nostdlib -DMACH_KERNEL_PRIVATE -O2 -D__KERNEL__ -DAPPLE -DNeXT $(KERNEL_)
-CXXFLAGS += -g -std=c++20 $(KERNEL_HEADERS) -isysroot $(SYSROOT) -arch $(KERNEL_ARCH) -fno-builtin -fno-common -nostdlib -DAPPLE -DNeXT
+CXXFLAGS += -g -std=c++20 $(KERNEL_HEADERS) -isysroot $(SYSROOT) -arch $(KERNEL_ARCH) -fno-builtin -mkernel -I./kernel -fno-common -nostdlib -DAPPLE -DNeXT
 LDFLAGS += -g -std=c++20 -isysroot $(SYSROOT) -arch $(KERNEL_ARCH) -fno-builtin -fno-common -L/usr/lib -L/usr/local/lib -D__KERNEL__ -DMACH_KERNEL_PRIVATE -Wl,-kext -DAPPLE -DNeXT  -target arm64e-apple-macos15.2 -Xlinker -reproducible -Xlinker -kext -nostdlib -lkmodc++ -lkmod -lcc_kext
 
 
