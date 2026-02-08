@@ -30,13 +30,13 @@ int main(int argc, char *argv[])
     if (argc == 3 && strncmp(argv[1], "read", strlen(argv[1])) == 0) {
         uint64_t readat = 0;
         sscanf(argv[2], "0x%llx", &readat);
-        kread64(sockfd, (void*)readat, &value);
+        kread64(sockfd, readat, &value);
         INFO("where: 0x%llx, what : 0x%016llx", readat, value);
     } else if (argc == 3 && strncmp(argv[1], "rread", strlen(argv[1])) == 0) {
         uint64_t readat = 0;
         sscanf(argv[2], "0x%llx", &readat);
         readat += kslide;
-        kread64(sockfd, (void*)readat, &value);
+        kread64(sockfd, readat, &value);
         INFO("where: 0x%llx, what : 0x%016llx", readat, value);
         INFO("value : 0x%x", (uint8_t)value);
     } else if (argc == 4 && strncmp(argv[1], "write", strlen(argv[1])) == 0) {

@@ -20,6 +20,7 @@ NASM := nasm
 
 PKG = com.home.inspector
 TARGET = inspector
+TARGET_LIB = libinspector.dylib
 
 KFWK = $(SYSROOT)/System/Library/Frameworks/Kernel.framework
 IOKIT_FWK = $(SYSROOT)/System/Library/Frameworks/IOKit.framework
@@ -93,7 +94,12 @@ set_owner: codesign
 $(BUILD)/$(TARGET): $(CLIENT_COBJECTS)
 	$(CC) -isysroot $(SYSROOT) -o $@ $(CLIENT_COBJECTS)
 
+$(BUILD)/$(TARGET_LIB): $(CLIENT_COBJECTS)
+	$(CC) -isysroot $(SYSROOT) -shared -undefined dynamic_lookup -o $@ $(CLIENT_COBJECTS)
+
 client: $(BUILD)/$(TARGET)
+
+client_lib: $(BUILD)/$(TARGET_LIB)
 
 clean_client:
 	rm -rf $(COBJ)/*

@@ -101,16 +101,16 @@ void *kbase(int fd) {
     return (void*)(KERNEL_BASE + kslide);
 }
 
-void kread64(int fd, void *address, uint64_t *value)
+void kread64(int fd, uint64_t address, uint64_t *value)
 {
     struct inspector_opt_krw64 req = {
-        .address = address,
+        .address = (void*)address,
         .value = 0
     };
     socklen_t len = sizeof(struct inspector_opt_krw64);
     int error = getsockopt(fd, SYSPROTO_CONTROL, INSPECTOR_OPT_KREAD64, &req, &len);
     if (error != 0) {
-        ERROR("kread64 at 0x%016llx, error : 0x%x", (uint64_t)address, error);
+        ERROR("kread64 at 0x%016llx, error : 0x%x", address, error);
         return;
     }
 
@@ -177,7 +177,11 @@ uint64_t kcall(int fd, uint64_t func, int num, ...)
 
     va_start (ap, num);
 
-    assert(num <= sizeof(req.arg));
+    if (num > 8) {
+        ERROR("kcall not supported number of arguments more than 8, you passed %d\n", num);
+        return -1;
+    }
+
     for (int i = 0; i < num; i++) {
         req.arg[i] = va_arg(ap, uint64_t);
     }
