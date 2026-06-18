@@ -16,6 +16,7 @@ Inspector consists of two components:
 - Call arbitrary kernel functions with up to 8 arguments (`kcall`)
 - Retrieve kernel slide (KASLR offset), kernel base, current process, and current task
 - Automatic KASLR slide detection via brute-force search
+- Attach a real debugger (lldb/gdb) to the live kernel via a built-in GDB Remote Serial Protocol server
 
 ## Requirements
 
@@ -66,7 +67,43 @@ Build artifacts are placed in the `build/` directory:
 
 # Test kcall functionality
 ./build/inspector test_kcall
+
+# Serve the GDB remote protocol for lldb/gdb (default port 1234)
+./build/inspector gdb
+
+# ...or on a custom port
+./build/inspector gdb 4455
 ```
+
+### Debugging with lldb
+
+Start the stub in one terminal (it connects to the loaded KEXT), then attach
+from lldb:
+
+```bash
+./build/inspector gdb 1234
+```
+
+```text
+(lldb) gdb-remote 127.0.0.1:1234
+(lldb) memory read 0xfffffe0007004000
+(lldb) memory write 0xfffffe0007004000 0x41
+(lldb) register write pc 0x<kernel-addr>    # only lldb's local view; see note below
+```
+
+The stub binds to **loopback only** (it exposes raw kernel read/write, so it is
+not put on the network). Memory accesses are serviced live by the KEXT via
+`copyin`/`copyout`. Because the KEXT cannot halt CPUs or recover per-core saved
+state, the register file is **synthetic**: it lives entirely in the stub's own
+memory (`g_reg` in `gdbstub.c`), starts zeroed, and a `register write` only
+updates that local copy -- it does **not** modify any real kernel CPU register.
+With only read/write/call primitives there is no way to alter the live register
+state of a running core. The synthetic registers exist solely so you can seed
+`pc`/`sp`/`fp`/`lr` to values you located in memory and have lldb walk a stack
+for you; `continue`/`step` simply re-report "stopped". This is a
+memory-inspection bridge, not an execution-control debugger. For symbolicated
+structure browsing, point lldb at a matching KDK kernel and slide it by the
+`kernel_slide` value the tool prints on startup.
 
 ### C API
 
@@ -113,6 +150,8 @@ inspector/
     main.c          # CLI tool
     inspector.c     # Client library implementation
     inspector.h     # Client API header
+    gdbstub.c       # GDB remote serial protocol server (for lldb/gdb)
+    gdbstub.h       # gdb stub declaration
     inspector.py    # Python bindings
     log.h           # Logging macros
   Makefile          # Build system

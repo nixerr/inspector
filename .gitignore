@@ -1,2 +1,4 @@
 build/
 .clangd
+.DS_Store
+__pycache__

@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
@@ -8,6 +9,7 @@
 
 #include "../kernel/inspector.h"
 #include "inspector.h"
+#include "gdbstub.h"
 #include "log.h"
 
 int main(int argc, char *argv[])
@@ -56,6 +58,12 @@ int main(int argc, char *argv[])
         // assert(kr == 0);
 
         // getpid(proc_t p, __unused struct getpid_args * uap, int32_t *retval)
+    } else if (argc >= 2 && strncmp(argv[1], "gdb", strlen(argv[1])) == 0) {
+        uint16_t port = 1234;
+        if (argc == 3) {
+            port = (uint16_t)strtoul(argv[2], NULL, 10);
+        }
+        gdb_serve(sockfd, port);
     }
 
 #if 0
