@@ -57,6 +57,7 @@ static uint64_t g_reg[NREG];
 
 static int g_noack = 0;         /* QStartNoAckMode negotiated                    */
 static int g_pending_noack = 0; /* flip to no-ack *after* the OK is acked        */
+static int g_trace = 0;         /* log every RSP packet to/from lldb             */
 
 static const char hexchars[] = "0123456789abcdef";
 
@@ -171,6 +172,8 @@ static int sendpkt(int s, const char *data)
     free(buf);
     if (rc) return -1;
 
+    if (g_trace) INFO("<- $%s", data);
+
     if (!g_noack) {
         char ack;
         if (read(s, &ack, 1) != 1) return -1;  /* '+' (or '-' = resend, ignored) */
@@ -187,7 +190,7 @@ static int recvpkt(int s, char *buf, size_t bufsz)
     for (;;) {                       /* sync to '$' (or a raw interrupt) */
         if (read(s, &c, 1) != 1) return -1;
         if (c == '$') break;
-        if (c == 0x03) { buf[0] = 0; return 0; }
+        if (c == 0x03) { buf[0] = 0; if (g_trace) INFO("%s", "-> <interrupt>"); return 0; }
         /* '+', '-', stray bytes: ignore */
     }
 
@@ -207,6 +210,7 @@ static int recvpkt(int s, char *buf, size_t bufsz)
         char ack = '+';
         if (sendraw(s, &ack, 1)) return -1;
     }
+    if (g_trace) INFO("-> $%s", buf);
     return (int)n;
 }
 
@@ -429,8 +433,10 @@ done:
 
 /* ---- server -------------------------------------------------------------- */
 
-int gdb_serve(int inspector_fd, uint16_t port)
+int gdb_serve(int inspector_fd, uint16_t port, int verbose)
 {
+    g_trace = verbose;
+
     int ls = socket(AF_INET, SOCK_STREAM, 0);
     if (ls < 0) { ERROR("socket: %s", strerror(errno)); return -1; }
 

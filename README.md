@@ -73,6 +73,10 @@ Build artifacts are placed in the `build/` directory:
 
 # ...or on a custom port
 ./build/inspector gdb 4455
+
+# Trace every RSP packet exchanged with lldb (requests and replies)
+./build/inspector gdb -v
+./build/inspector gdb 4455 -v
 ```
 
 ### Debugging with lldb

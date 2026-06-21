@@ -10,8 +10,11 @@
  * Blocks forever, accepting one client at a time (reconnect is allowed).
  * Connect from lldb with:  (lldb) gdb-remote 127.0.0.1:<port>
  *
+ * When <verbose> is non-zero, every RSP packet exchanged with lldb is logged:
+ * "-> $..." for requests received and "<- $..." for replies sent.
+ *
  * Returns non-zero only on a fatal setup error (bind/listen).
  */
-int gdb_serve(int inspector_fd, uint16_t port);
+int gdb_serve(int inspector_fd, uint16_t port, int verbose);
 
 #endif

@@ -60,10 +60,14 @@ int main(int argc, char *argv[])
         // getpid(proc_t p, __unused struct getpid_args * uap, int32_t *retval)
     } else if (argc >= 2 && strncmp(argv[1], "gdb", strlen(argv[1])) == 0) {
         uint16_t port = 1234;
-        if (argc == 3) {
-            port = (uint16_t)strtoul(argv[2], NULL, 10);
+        int verbose = 0;
+        for (int i = 2; i < argc; i++) {
+            if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0)
+                verbose = 1;
+            else
+                port = (uint16_t)strtoul(argv[i], NULL, 10);
         }
-        gdb_serve(sockfd, port);
+        gdb_serve(sockfd, port, verbose);
     }
 
 #if 0
