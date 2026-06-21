@@ -115,32 +115,8 @@ static uint64_t hex2reg(const char *h, int bytes)
 
 /* ---- kext memory bridge (returns 0 on success, -1 with errno set) -------- */
 
-/*
- * arm64 kernel virtual-address window. The kext forwards these addresses
- * straight into copyin/copyout, whose copy_validate_kernel_addr() *panics the
- * whole machine* on any address outside the kernel map ("kaddr not in kernel").
- * lldb probes plenty of non-kernel addresses during attach -- the commpage at
- * 0xfffffff0..., NULL, leftover user pointers -- so every address must be
- * range-checked here before it can reach the kext. On this target all real
- * kernel addresses (text, zones, stacks, metadata) live in 0xfffffe..., which
- * sits just below the commpage that triggered the panic.
- */
-#define KVA_MIN 0xfffffe0000000000ULL
-#define KVA_MAX 0xfffffeffffffffffULL
-
-static int kaddr_in_kernel(uint64_t kaddr, uint64_t len)
-{
-    if (len == 0)        return 1;
-    if (kaddr < KVA_MIN) return 0;
-    if (kaddr > KVA_MAX) return 0;
-    if (len - 1 > KVA_MAX - kaddr) return 0;   /* end past window / overflow */
-    return 1;
-}
-
 static int kmem_read(int fd, uint64_t kaddr, void *ubuf, uint64_t len)
 {
-    if (!kaddr_in_kernel(kaddr, len)) { errno = EFAULT; return -1; }
-
     struct inspector_opt_copy req = {
         .kaddress = (void *)kaddr,
         .uaddress = (user_addr_t)(uintptr_t)ubuf,
@@ -152,8 +128,6 @@ static int kmem_read(int fd, uint64_t kaddr, void *ubuf, uint64_t len)
 
 static int kmem_write(int fd, uint64_t kaddr, const void *ubuf, uint64_t len)
 {
-    if (!kaddr_in_kernel(kaddr, len)) { errno = EFAULT; return -1; }
-
     struct inspector_opt_copy req = {
         .kaddress = (void *)kaddr,
         .uaddress = (user_addr_t)(uintptr_t)ubuf,
