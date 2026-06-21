@@ -6,6 +6,7 @@
 //
 
 // #include <mach/mach_types.h>
+#include <IOKit/IOLib.h>
 #include <libkern/libkern.h>
 #include <sys/kern_control.h>
 #include <sys/kernel.h>
@@ -196,7 +197,15 @@ errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
                 return EINVAL;
             }
 
-            error = copyin(req->uaddress, req->kaddress, req->length);
+            void *buffer = IOMallocZeroData(req->length);
+            if (buffer == NULL) {
+                return ENOMEM;
+            }
+
+            error = copyin(req->uaddress, buffer, req->length);
+            memcpy(req->kaddress, buffer, req->length);
+            IOFreeData(buffer, req->length);
+
             break;
         }
 
@@ -247,7 +256,14 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
                 return EINVAL;
             }
 
-            error = copyout(req->kaddress, req->uaddress, req->length);
+            void *buffer = IOMallocZeroData(req->length);
+            if (buffer == NULL) {
+                return ENOMEM;
+            }
+            memcpy(buffer, req->kaddress, req->length);
+            error = copyout(buffer, req->uaddress, req->length);
+            IOFreeData(buffer, req->length);
+
             break;
         }
 
