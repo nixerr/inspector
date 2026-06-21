@@ -32,7 +32,23 @@
 
 
 extern task_t kernel_task;
+// extern pmap_t kernel_pmap;
 extern void *kernproc;
+
+// typedef uint64_t pmap_paddr_t __kernel_ptr_semantics; /* physical address (not ppnum_t) */
+// extern "C" uint64_t kvtophys(vm_offset_t va);
+
+// extern "C" vm_offset_t ml_vtophys(
+// 	vm_offset_t vaddr);
+
+typedef struct pmap             *pmap_t;
+extern "C" ppnum_t
+pmap_find_phys(
+	uint64_t pmap,
+	addr64_t va);
+
+// extern "C" boolean_t ml_validate_nofault(
+// 	vm_offset_t virtsrc, vm_size_t size);
 // extern void *task_get_proc_raw(task_t task);
 
 vm_offset_t kernel_slide = 0;
@@ -45,6 +61,80 @@ vm_offset_t kernel_slide = 0;
 #define LOG(, format, ...)
 #endif
 
+
+typedef uint64_t pmap_paddr_t __kernel_ptr_semantics; /* physical address (not ppnum_t) */
+
+// static inline bool
+// pa_valid(pmap_paddr_t pa)
+// {
+//     extern pmap_paddr_t vm_first_phys, vm_last_phys;
+// 	return (pa >= vm_first_phys) && (pa < vm_last_phys);
+// }
+
+// boolean_t
+// pmap_valid_address(
+// 	pmap_paddr_t addr)
+// {
+// 	return pa_valid(addr);
+// }
+
+#define trunc_page_64(x) ((uint64_t)(x) & ~((uint64_t)PAGE_MASK_64))
+
+
+pmap_paddr_t
+kvtophys(vm_offset_t va)
+{
+    extern uint64_t kernel_pmap;            /* The kernel's map */
+    pmap_paddr_t pa = pmap_find_phys(kernel_pmap, va);
+
+	if (pa) {
+		return pa;
+	}
+
+	/* If the MMU can't find the mapping, then manually walk the page tables. */
+	// return pmap_vtophys(kernel_pmap, va);
+    return 0;
+}
+
+// boolean_t
+// ml_validate_nofault(
+// 	vm_offset_t virtsrc, vm_size_t size)
+// {
+// 	addr64_t cur_phys_src;
+// 	uint32_t count;
+//
+// 	while (size > 0) {
+// 		if (!(cur_phys_src = kvtophys(virtsrc))) {
+// 			return FALSE;
+// 		}
+// 		if (!pmap_valid_address(trunc_page_64(cur_phys_src))) {
+// 			return FALSE;
+// 		}
+// 		count = (uint32_t)(PAGE_SIZE - (cur_phys_src & PAGE_MASK));
+// 		if (count > size) {
+// 			count = (uint32_t)size;
+// 		}
+//
+// 		virtsrc += count;
+// 		size -= count;
+// 	}
+//
+// 	return TRUE;
+// }
+
+//
+// pmap_paddr_t
+// kvtophys(vm_offset_t va)
+// {
+//     extern uint64_t kernel_pmap;
+//
+//     ppnum_t upn = pmap_find_phys(p, uaddr);
+//     uint64_t phys_src = ptoa_64(upn) | (uaddr & PAGE_MASK);
+//
+//     // ppnum_t pa = pmap_find_phys(kernel_pmap, va);
+//     if (pa == 0)
+// }
+//
 uint64_t bruteforce_kslide(void)
 {
     uint64_t kslide = 0;
@@ -101,6 +191,11 @@ errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
                 break;
             }
             inspector_opt_copy_t req = (inspector_opt_copy_t)data;
+
+            if (!kvtophys((vm_offset_t)req->kaddress)) {
+                return EINVAL;
+            }
+
             error = copyin(req->uaddress, req->kaddress, req->length);
             break;
         }
@@ -112,6 +207,11 @@ errno_t EPHandleSet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
             }
             error = 0;
             inspector_opt_krw64_t req = (inspector_opt_krw64_t)data;
+
+            if (!kvtophys((vm_offset_t)req->address)) {
+                return EINVAL;
+            }
+
             kwrite64(req);
             break;
         }
@@ -142,6 +242,11 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
             }
 
             inspector_opt_copy_t req = (inspector_opt_copy_t)data;
+
+            if (!kvtophys((vm_offset_t)req->kaddress)) {
+                return EINVAL;
+            }
+
             error = copyout(req->kaddress, req->uaddress, req->length);
             break;
         }
@@ -158,6 +263,11 @@ errno_t EPHandleGet(kern_ctl_ref ctlref, unsigned int unit, void *userdata, int 
                 .address = req->address,
                 .value = 0
             };
+
+            if (!kvtophys((vm_offset_t)req->address)) {
+                return EINVAL;
+            }
+
             kread64(&lreq);
             memcpy(data, &lreq, sizeof(struct inspector_opt_krw64));
             break;

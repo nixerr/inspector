@@ -18,7 +18,18 @@ CXX := $(CLANGPP)
 
 NASM := nasm
 
-PKG = com.home.inspector
+NM := $(shell xcrun --sdk $(SDK) --find nm)
+
+# Exported KPI / kernel symbols collection
+KERNEL_IMAGE ?= /System/Library/Kernels/kernel
+KPI_OUT = $(BUILD)/kpi.txt
+
+# OSBundleLibraries is generated from every com.apple.kpi.* symbol set available
+# on the running system, so the kext binds to this host's exact KPI versions.
+KPI_PLUGINS = /System/Library/Extensions/System.kext/PlugIns
+KPI_WATERMARK = __KPI_LIBRARIES__
+
+# PKG = com.apple.security.inspector
 TARGET = inspector
 TARGET_LIB = libinspector.dylib
 
@@ -82,11 +93,24 @@ $(BUILD)/$(TARGET).kext/Contents/MacOS/$(TARGET): $(KERNEL_COBJECTS) $(KERNEL_CP
 	$(CXX) $(LDFLAGS) -o $@ $(KERNEL_COBJECTS) $(KERNEL_CPPOBJECTS)
 
 $(BUILD)/$(TARGET).kext/Contents/Info.plist: Info.plist | $(BUILD)/$(TARGET).kext/Contents/MacOS
-	cp -f $< $@
+	@libs=""; \
+	for p in $(KPI_PLUGINS)/*.kext/Info.plist; do \
+		id=$$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$$p" 2>/dev/null); \
+		case "$$id" in \
+			com.apple.kpi.private|com.apple.kpi.kasan|com.apple.kpi.kcov) continue;; \
+			com.apple.kpi.*) ;; \
+			*) continue;; \
+		esac; \
+		ver=$$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$$p" 2>/dev/null); \
+		libs="$$libs\t\t<key>$$id</key>\n\t\t<string>$$ver</string>\n"; \
+	done; \
+	[ -n "$$libs" ] || { echo "ERROR: no com.apple.kpi.* libraries found under $(KPI_PLUGINS)"; exit 1; }; \
+	awk -v repl="$$libs" '{ if ($$0 ~ /$(KPI_WATERMARK)/) printf "%s", repl; else print }' $< > $@; \
+	echo "Info.plist: injected $$(printf "%b" "$$libs" | grep -c '<key>') available KPI libraries"
 
-codesign: $(BUILD)/$(TARGET).kext/Contents/MacOS/$(TARGET)
+codesign: $(BUILD)/$(TARGET).kext/Contents/MacOS/$(TARGET) $(BUILD)/$(TARGET).kext/Contents/Info.plist
 	codesign --remove-signature $(BUILD)/$(TARGET).kext
-	codesign --sign - --force --entitlements Info.plist $(BUILD)/$(TARGET).kext
+	codesign --sign - --force --entitlements $(BUILD)/$(TARGET).kext/Contents/Info.plist $(BUILD)/$(TARGET).kext
 
 set_owner: codesign
 	sudo chown -R root:wheel $(BUILD)/$(TARGET).kext

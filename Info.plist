@@ -40,16 +40,7 @@
 	<string>15.2</string>
 	<key>OSBundleLibraries</key>
 	<dict>
-		<key>com.apple.kpi.libkern</key>
-		<string>23.5.0</string>
-		<key>com.apple.kpi.bsd</key>
-		<string>23.5.0</string>
-		<key>com.apple.kpi.mach</key>
-		<string>23.5.0</string>
-		<key>com.apple.kpi.iokit</key>
-		<string>23.5.0</string>
-		<!-- <key>com.apple.kpi.private</key>
-		<string>11.0</string> -->
+		__KPI_LIBRARIES__
 	</dict>
 </dict>
 </plist>
