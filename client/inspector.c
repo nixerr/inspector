@@ -101,7 +101,7 @@ void *kbase(int fd) {
     return (void*)(KERNEL_BASE + kslide);
 }
 
-void kread64(int fd, uint64_t address, uint64_t *value)
+int kread64(int fd, uint64_t address, uint64_t *value)
 {
     struct inspector_opt_krw64 req = {
         .address = (void*)address,
@@ -109,16 +109,12 @@ void kread64(int fd, uint64_t address, uint64_t *value)
     };
     socklen_t len = sizeof(struct inspector_opt_krw64);
     int error = getsockopt(fd, SYSPROTO_CONTROL, INSPECTOR_OPT_KREAD64, &req, &len);
-    if (error != 0) {
-        ERROR("kread64 at 0x%016llx, error : 0x%x", address, error);
-        return;
-    }
 
     *value = req.value;
-    return;
+    return error;
 }
 
-void kwrite64(int fd, uint64_t address, uint64_t value)
+int kwrite64(int fd, uint64_t address, uint64_t value)
 {
     struct inspector_opt_krw64 req = {
         .address = (void*)address,
@@ -127,14 +123,11 @@ void kwrite64(int fd, uint64_t address, uint64_t value)
 
     socklen_t len = sizeof(struct inspector_opt_krw64);
     int error = setsockopt(fd, SYSPROTO_CONTROL, INSPECTOR_OPT_KWRITE64, &req, len);
-    if (error != 0) {
-        ERROR("kwrite at 0x%016llx, error : 0x%x", address, error);
-    }
 
-    return;
+    return error;
 }
 
-void kcopyin(int fd, void *kaddress, void *uaddress, uint64_t length)
+int kcopyin(int fd, void *kaddress, void *uaddress, uint64_t length)
 {
     struct inspector_opt_copy req = {
         .kaddress = kaddress,
@@ -144,14 +137,11 @@ void kcopyin(int fd, void *kaddress, void *uaddress, uint64_t length)
 
     socklen_t len = sizeof(struct inspector_opt_copy);
     int error = setsockopt(fd, SYSPROTO_CONTROL, INSPECTOR_OPT_COPYIN, &req, len);
-    if (error != 0) {
-        ERROR("kcopyin to 0x%016llx from 0x%016llx, error : 0x%x", (uint64_t)kaddress, (uint64_t)uaddress, error);
-    }
 
-    return;
+    return error;
 }
 
-void kcopyout(int fd, void *kaddress, void *uaddress, uint64_t length)
+int kcopyout(int fd, void *kaddress, void *uaddress, uint64_t length)
 {
     struct inspector_opt_copy req = {
         .kaddress = kaddress,
@@ -161,11 +151,8 @@ void kcopyout(int fd, void *kaddress, void *uaddress, uint64_t length)
 
     socklen_t len = sizeof(struct inspector_opt_copy);
     int error = getsockopt(fd, SYSPROTO_CONTROL, INSPECTOR_OPT_COPYOUT, &req, &len);
-    if (error != 0) {
-        ERROR("kcopyin to 0x%016llx from 0x%016llx, error : 0x%x", (uint64_t)kaddress, (uint64_t)uaddress, error);
-    }
 
-    return;
+    return error;
 }
 
 uint64_t kcall(int fd, uint64_t func, int num, ...)

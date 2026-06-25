@@ -357,7 +357,7 @@ kern_return_t inspector_start(kmod_info_t * ki, void *d)
     ep_ctl.ctl_id = 0; /* OLD STYLE: ep_ctl.ctl_id = kEPCommID; */
     ep_ctl.ctl_unit = 0;
     strcpy(ep_ctl.ctl_name, INSPECTOR_CONTROL_SOCKET, sizeof(ep_ctl.ctl_name));
-    ep_ctl.ctl_flags = CTL_FLAG_REG_ID_UNIT; // & CTL_FLAG_PRIVILEGED;
+    ep_ctl.ctl_flags = 0 ; // CTL_FLAG_REG_ID_UNIT; // & CTL_FLAG_PRIVILEGED;
     ep_ctl.ctl_send = EPHandleWrite;
     ep_ctl.ctl_getopt = EPHandleGet;
     ep_ctl.ctl_setopt = EPHandleSet;
